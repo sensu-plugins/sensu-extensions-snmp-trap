@@ -6,12 +6,17 @@ describe "Sensu::Extension::SNMPTrap" do
 
   before do
     @extension = Sensu::Extension::SNMPTrap.new
+    @extension.settings = {}
+    @extension.logger = Sensu::Logger.get
   end
 
   it "can run" do
-    @extension.safe_run(event_template) do |output, status|
-      expect(output).to eq("it's a trap!")
-      expect(status).to eq(0)
+    async_wrapper do
+      @extension.safe_run(event_template) do |output, status|
+        puts output.inspect
+        expect(status).to eq(0)
+        async_done
+      end
     end
   end
 end
