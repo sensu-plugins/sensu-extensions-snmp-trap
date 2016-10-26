@@ -12,7 +12,6 @@ describe "Sensu::Extension::SNMPTrap" do
   end
 
   let(:snmpv2_pdu) do
-    pen = "1.3.6.1.4.1.45717" + ".1.1.1"
     varbind_list = [
       SNMP::VarBind.new(SNMP::SYS_UP_TIME_OID, SNMP::TimeTicks.new(20)),
       SNMP::VarBind.new(SNMP::SNMP_TRAP_OID_OID, SNMP::ObjectId.new("1.3.6.1.4.1.45717.1.0")),
@@ -26,7 +25,7 @@ describe "Sensu::Extension::SNMPTrap" do
 
   it "can run" do
     async_wrapper do
-      EM::Timer.new(2) do
+      EM::Timer.new(0.5) do
         socket = UDPSocket.new
         socket.send(snmpv2_message, 0, "127.0.0.1", 1062)
         socket.close

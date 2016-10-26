@@ -13,6 +13,13 @@ module Sensu
         "receives snmp traps and translates them to check results"
       end
 
+      def definition
+        {
+          name: name,
+          publish: false
+        }
+      end
+
       def options
         return @options if @options
         @options = {
@@ -26,7 +33,7 @@ module Sensu
         @options
       end
 
-      def start_listener
+      def start_snmpv2_listener
         @listener = ::SNMP::TrapListener.new(:host => options[:bind], :port => options[:port]) do |listener|
           listener.on_trap_v2c do |trap|
             @logger.debug("snmp trap check extension received a v2 trap")
@@ -35,17 +42,34 @@ module Sensu
         end
       end
 
+      def start_trap_processor
+        @processor = Thread.new do
+          loop do
+            trap = @traps.pop
+            @logger.debug("snmp trap check extension processing a v2 trap")
+            @results << trap
+          end
+        end
+      end
+
       def post_init
         @traps = Queue.new
-        start_listener
+        @results = Queue.new
+        start_snmpv2_listener
+        start_trap_processor
+      end
+
+      def stop
+        @listener.kill if @listener
+        @processor.kill if @processor
       end
 
       def run(event, &callback)
-        wait_for_trap = Proc.new do
-          [@traps.pop, 0]
+        wait_for_result = Proc.new do
+          [@results.pop, 0]
         end
         EM.next_tick do
-          EM.defer(wait_for_trap, callback)
+          EM.defer(wait_for_result, callback)
         end
       end
     end
