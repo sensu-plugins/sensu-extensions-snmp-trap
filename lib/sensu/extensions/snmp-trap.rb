@@ -34,7 +34,7 @@ module Sensu
       end
 
       def start_snmpv2_listener
-        @listener = ::SNMP::TrapListener.new(:host => options[:bind], :port => options[:port]) do |listener|
+        @listener = SNMP::TrapListener.new(:host => options[:bind], :port => options[:port]) do |listener|
           listener.on_trap_v2c do |trap|
             @logger.debug("snmp trap check extension received a v2 trap")
             @traps << trap
@@ -42,12 +42,15 @@ module Sensu
         end
       end
 
+      def process_trap(trap)
+        @logger.debug("snmp trap check extension processing a v2 trap")
+        @results << trap
+      end
+
       def start_trap_processor
         @processor = Thread.new do
           loop do
-            trap = @traps.pop
-            @logger.debug("snmp trap check extension processing a v2 trap")
-            @results << trap
+            process_trap(@traps.pop)
           end
         end
       end
