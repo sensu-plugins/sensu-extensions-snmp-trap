@@ -1,5 +1,6 @@
 require File.join(File.dirname(__FILE__), "helpers")
 require "sensu/extensions/snmp-trap"
+require "socket"
 
 describe "Sensu::Extension::SNMPTrap" do
   include Helpers
@@ -10,27 +11,30 @@ describe "Sensu::Extension::SNMPTrap" do
     @extension.logger = Sensu::Logger.get
   end
 
-  let(:snmp_pdu) do
+  let(:snmpv2_pdu) do
     pen = "1.3.6.1.4.1.45717" + ".1.1.1"
     varbind_list = [
-      VarBind.new(pen + ".1", "113C8FF4-88C3-40A6-9DDE-17470635FED0")
+      SNMP::VarBind.new(SNMP::SYS_UP_TIME_OID, SNMP::TimeTicks.new(20)),
+      SNMP::VarBind.new(SNMP::SNMP_TRAP_OID_OID, SNMP::ObjectId.new("1.3.6.1.4.1.45717.1.0")),
     ]
-    SNMPv2_Trap.new(1, VarBindList.new(varbind_list))
+    SNMP::SNMPv2_Trap.new(1, SNMP::VarBindList.new(varbind_list))
   end
 
   let(:snmpv2_message) do
-    Message.new(:SNMPv2c, "public", snmp_pdu).encode
+    SNMP::Message.new(:SNMPv2c, "public", snmpv2_pdu).encode
   end
 
   it "can run" do
     async_wrapper do
-      @extension.safe_run(event_template) do |output, status|
+      EM::Timer.new(2) do
         socket = UDPSocket.new
-        socket.send(message, 0, "127.0.0.1", 162)
+        socket.send(snmpv2_message, 0, "127.0.0.1", 1062)
         socket.close
-        puts output.inspect
-        expect(status).to eq(0)
-        async_done
+        @extension.safe_run(event_template) do |output, status|
+          puts output.inspect
+          expect(status).to eq(0)
+          async_done
+        end
       end
     end
   end
