@@ -2,17 +2,17 @@ require "sensu/extension"
 
 module Sensu
   module Extension
-    class Template < Handler
+    class SNMPTrap < Check
       def name
-        "template"
+        "snmp_trap"
       end
 
       def description
-        "extension template"
+        "receives snmp traps and translates them to check results"
       end
 
       def run(event)
-        yield "template", 0
+        yield "it's a trap!", 0
       end
     end
   end
