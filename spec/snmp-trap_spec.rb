@@ -7,7 +7,11 @@ describe "Sensu::Extension::SNMPTrap" do
 
   before do
     @extension = Sensu::Extension::SNMPTrap.new
-    @extension.settings = {}
+    @extension.settings = {
+      :snmp_trap => {
+        :mibs_dir => File.join(File.dirname(__FILE__), "mibs")
+      }
+    }
     @extension.logger = Sensu::Logger.get
   end
 
