@@ -1,11 +1,26 @@
-# Sensu::Extensions::Template
+# Sensu SNMP Trap Check Extension
 
-Welcome to the Sensu Extensions repository template! In this repository, you will find the files you need to be able to author your own Sensu Extension for Sensu Core (>= 0.26).
+Creates a SNMPv2 trap listener as part of the Sensu client process.
+This SNMP trap extension loads MIBs and attempts to translate SNMP
+traps into Sensu check results.
 
-## Usage
+## Inspiration
 
-1. Fork this repository and name the fork after your new extension, e.g. `"sensu-extensions-docker"`
+This SNMP trap extension was inspired by the work done by Toby Jackson
+on [SNMPTrapHandler](https://github.com/warmfusion/sensu-extension-snmptrap).
 
-2. Write your extension (with tests!)
+## Installation
 
-3. Create a GitHub issue on [sensu-extensions/template](https://github.com/sensu-extensions/template/issues) to request a review of your extension, to determine if it is ready to be moved to the [sensu-extensions GitHub organization](https://github.com/sensu-extensions) to be shared with the Sensu community!
+```
+sensu-install -e snmp-trap
+```
+
+## Configuration
+
+|param|type|default|description|
+|----|----|----|---|
+|:bind|:string|0.0.0.0|IP to bind the SNMP trap listener to|
+|:port|:integer|1062|Port to bind the SNMP trap listener to|
+|:community|:string|"public"|SNMP community string to use|
+|:handlers|:array|["default"]|Handlers to specify in Sensu check results|
+|:mibs_dir|:string|"/etc/sensu/mibs"|MIBs directory to import and load MIBs from|
