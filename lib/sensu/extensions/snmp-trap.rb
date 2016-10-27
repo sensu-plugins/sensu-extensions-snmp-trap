@@ -7,9 +7,22 @@ module Sensu
     class SNMPTrap < Check
 
       RESULT_MAP = [
-        [/notification/i, :output, :to_s],
-        [/severity/i, :status, :to_i]
+        [/notification/i, :output],
+        [/severity/i, :status]
       ]
+
+      RUBY_ASN1_MAP = {
+        "INTEGER" => :to_i,
+        "OCTET STRING" => :to_s,
+        "OBJECT IDENTIFIER" => :to_s,
+        "IpAddress" => :to_s,
+        "Counter32" => :to_i,
+        "Gauge32" => :to_i,
+        "Unsigned32" => :to_i,
+        "TimeTicks" => :to_i,
+        "Opaque" => :to_s,
+        "Counter64" => :to_i
+      }
 
       def name
         "snmp_trap"
@@ -86,10 +99,13 @@ module Sensu
         trap.varbind_list.each do |varbind|
           symbolic_name = @mibs.name(varbind.name.to_oid)
           mapping = RESULT_MAP.detect do |mapping|
-            symbolic_name =~ mapping[0]
+            symbolic_name =~ mapping.first
           end
-          if mapping && !result[mapping[1]]
-            result[mapping[1]] = varbind.value.send(mapping[2])
+          if mapping && !result[mapping.last]
+            type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
+            if type_conversion
+              result[mapping.last] = varbind.value.send(type_conversion)
+            end
           end
         end
         send_result(result)
