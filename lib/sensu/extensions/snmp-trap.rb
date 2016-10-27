@@ -7,7 +7,8 @@ module Sensu
     class SNMPTrap < Check
 
       RESULT_MAP = [
-        [/notification/i, :output]
+        [/notification/i, :output, :to_s],
+        [/severity/i, :status, :to_i]
       ]
 
       def name
@@ -85,10 +86,10 @@ module Sensu
         trap.varbind_list.each do |varbind|
           symbolic_name = @mibs.name(varbind.name.to_oid)
           mapping = RESULT_MAP.detect do |mapping|
-            symbolic_name =~ mapping.first
+            symbolic_name =~ mapping[0]
           end
-          if mapping && !result[mapping.last]
-            result[mapping.last] = varbind.value.to_s
+          if mapping && !result[mapping[1]]
+            result[mapping[1]] = varbind.value.send(mapping[2])
           end
         end
         send_result(result)
