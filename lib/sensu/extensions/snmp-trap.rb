@@ -7,6 +7,7 @@ module Sensu
     class SNMPTrap < Check
 
       RESULT_MAP = [
+        [/checkname/i, :name],
         [/notification/i, :output],
         [/severity/i, :status]
       ]
