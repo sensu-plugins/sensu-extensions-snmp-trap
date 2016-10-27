@@ -15,6 +15,18 @@ on [SNMPTrapHandler](https://github.com/warmfusion/sensu-extension-snmptrap).
 sensu-install -e snmp-trap
 ```
 
+Edit `/etc/sensu/conf.d/extensions.json` to load it.
+
+``` json
+{
+  "extensions": {
+    "snmp-trap": {
+      "version": "0.0.2"
+    }
+  }
+}
+```
+
 ## Configuration
 
 |param|type|default|description|
