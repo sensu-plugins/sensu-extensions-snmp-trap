@@ -68,9 +68,20 @@ module Sensu
         socket.close
       end
 
+      def determine_hostname(address)
+        begin
+          Resolv.getname(address)
+        rescue Resolv::ResolvError
+          @logger.debug("snmp trap check extension unable to resolve hostname", :address => address)
+          address
+        end
+      end
+
       def process_trap(trap)
         @logger.debug("snmp trap check extension processing a v2 trap")
-        result = {}
+        result = {
+          :source => determine_hostname(trap.source_ip)
+        }
         trap.varbind_list.each do |varbind|
           symbolic_name = @mibs.name(varbind.name.to_oid)
           mapping = RESULT_MAP.detect do |mapping|
