@@ -46,7 +46,7 @@ module Sensu
           :bind => "0.0.0.0",
           :port => 1062,
           :community => "public",
-          :handler => "default",
+          :handlers => ["default"],
           :mibs_dir => "/etc/sensu/mibs"
         }
         @options.merge!(@settings[:snmp_trap]) if @settings[:snmp_trap].is_a?(Hash)
@@ -54,7 +54,10 @@ module Sensu
       end
 
       def start_snmpv2_listener!
-        @listener = SNMP::TrapListener.new(:host => options[:bind], :port => options[:port]) do |listener|
+        @listener = SNMP::TrapListener.new(
+          :host => options[:bind],
+          :port => options[:port],
+          :community => options[:community]) do |listener|
           listener.on_trap_v2c do |trap|
             @logger.debug("snmp trap check extension received a v2 trap")
             @traps << trap
@@ -92,10 +95,18 @@ module Sensu
         end
       end
 
+      def determine_trap_oid(trap)
+        varbind = trap.varbind_list.detect do |varbind|
+          varbind.name.to_oid == SNMP::SNMP_TRAP_OID_OID
+        end
+        varbind.value.to_s rescue "trap_oid_unknown"
+      end
+
       def process_trap(trap)
         @logger.debug("snmp trap check extension processing a v2 trap")
         result = {
-          :source => determine_hostname(trap.source_ip)
+          :source => determine_hostname(trap.source_ip),
+          :handlers => options[:handlers]
         }
         trap.varbind_list.each do |varbind|
           symbolic_name = @mibs.name(varbind.name.to_oid)
@@ -109,6 +120,9 @@ module Sensu
             end
           end
         end
+        result[:name] ||= determine_trap_oid(trap)
+        result[:output] ||= trap.inspect
+        result[:status] ||= 3
         send_result(result)
       end
 
