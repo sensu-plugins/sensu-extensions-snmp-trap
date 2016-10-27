@@ -5,6 +5,11 @@ require "snmp"
 module Sensu
   module Extension
     class SNMPTrap < Check
+
+      RESULT_MAP = [
+        [/notification/i, :output]
+      ]
+
       def name
         "snmp_trap"
       end
@@ -43,21 +48,33 @@ module Sensu
       end
 
       def load_mibs!
-        @mibs = SNMP::MIB.new
         @logger.debug("snmp trap check extension importing mibs", :mibs_dir => options[:mibs_dir])
         Dir.glob(File.join(options[:mibs_dir], "*")) do |mib_file|
-          module_name = SNMP::MIB.import_module(mib_file)
-          if module_name
-            @logger.debug("snmp trap check extension loading mib", :module_name => module_name)
-            @mibs.load_module(module_name)
-          end
+          @logger.debug("snmp trap check extension importing mib", :mib_file => mib_file)
+          SNMP::MIB.import_module(mib_file)
+        end
+        @mibs = SNMP::MIB.new
+        @logger.debug("snmp trap check extension loading mibs")
+        SNMP::MIB.list_imported.each do |module_name|
+          @logger.debug("snmp trap check extension loading mib", :module_name => module_name)
+          @mibs.load_module(module_name)
         end
         @mibs
       end
 
       def process_trap(trap)
         @logger.debug("snmp trap check extension processing a v2 trap")
-        @results << trap
+        result = {}
+        trap.varbind_list.each do |varbind|
+          symbolic_name = @mibs.name(varbind.name.to_oid)
+          mapping = RESULT_MAP.detect do |mapping|
+            symbolic_name =~ mapping.first
+          end
+          if mapping && !result[mapping.last]
+            result[mapping.last] = varbind.value.to_s
+          end
+        end
+        @results << result
       end
 
       def start_trap_processor!
@@ -84,7 +101,8 @@ module Sensu
 
       def run(event, &callback)
         wait_for_result = Proc.new do
-          [@results.pop, 0]
+          result = @results.pop
+          [result[:output], 0]
         end
         EM.next_tick do
           EM.defer(wait_for_result, callback)

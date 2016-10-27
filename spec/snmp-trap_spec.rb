@@ -19,6 +19,7 @@ describe "Sensu::Extension::SNMPTrap" do
     varbind_list = [
       SNMP::VarBind.new(SNMP::SYS_UP_TIME_OID, SNMP::TimeTicks.new(20)),
       SNMP::VarBind.new(SNMP::SNMP_TRAP_OID_OID, SNMP::ObjectId.new("1.3.6.1.4.1.45717.1.0")),
+      SNMP::VarBind.new("1.3.6.1.4.1.45717.1.1.1.2", SNMP::OctetString.new("alert"))
     ]
     SNMP::SNMPv2_Trap.new(1, SNMP::VarBindList.new(varbind_list))
   end
@@ -34,7 +35,7 @@ describe "Sensu::Extension::SNMPTrap" do
         socket.send(snmpv2_message, 0, "127.0.0.1", 1062)
         socket.close
         @extension.safe_run(event_template) do |output, status|
-          puts output.inspect
+          expect(output).to eq("alert")
           expect(status).to eq(0)
           async_done
         end
