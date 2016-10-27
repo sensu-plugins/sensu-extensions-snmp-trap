@@ -99,7 +99,7 @@ module Sensu
         varbind = trap.varbind_list.detect do |varbind|
           varbind.name.to_oid == SNMP::SNMP_TRAP_OID_OID
         end
-        varbind.value.to_s rescue "trap_oid_unknown"
+        varbind.value.to_s.gsub(/[^\w\.-]/i, "-") rescue "trap_oid_unknown"
       end
 
       def process_trap(trap)
