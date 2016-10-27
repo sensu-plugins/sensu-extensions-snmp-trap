@@ -30,14 +30,13 @@ describe "Sensu::Extension::SNMPTrap" do
 
   it "can run" do
     async_wrapper do
-      EM::Timer.new(0.5) do
-        socket = UDPSocket.new
-        socket.send(snmpv2_message, 0, "127.0.0.1", 1062)
-        socket.close
-        @extension.safe_run(event_template) do |output, status|
-          expect(output).to eq("alert")
-          expect(status).to eq(0)
-          async_done
+      EM::open_datagram_socket("127.0.0.1", 3030, Helpers::TestServer) do |server|
+        server.expected = '{"output": "alert"}'
+      end
+      EM.next_tick do
+        EM::open_datagram_socket("0.0.0.0", 0, nil) do |socket|
+          socket.send_datagram(snmpv2_message, "127.0.0.1", 1062)
+          socket.close_connection_after_writing
         end
       end
     end

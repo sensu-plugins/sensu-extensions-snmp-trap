@@ -78,4 +78,17 @@ module Helpers
       :action => :create
     }
   end
+
+  class TestServer < EM::Connection
+    include RSpec::Matchers
+
+    attr_accessor :expected
+
+    def receive_data(data)
+      if @expected
+        expect(Sensu::JSON.load(data)).to eq(Sensu::JSON.load(@expected))
+        EM::stop_event_loop
+      end
+    end
+  end
 end

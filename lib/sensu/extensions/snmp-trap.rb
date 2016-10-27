@@ -62,6 +62,12 @@ module Sensu
         @mibs
       end
 
+      def send_result(result)
+        socket = UDPSocket.new
+        socket.send(Sensu::JSON.dump(result), 0, "127.0.0.1", 3030)
+        socket.close
+      end
+
       def process_trap(trap)
         @logger.debug("snmp trap check extension processing a v2 trap")
         result = {}
@@ -74,7 +80,7 @@ module Sensu
             result[mapping.last] = varbind.value.to_s
           end
         end
-        @results << result
+        send_result(result)
       end
 
       def start_trap_processor!
@@ -85,11 +91,11 @@ module Sensu
           end
         end
         @processor.abort_on_exception = true
+        @processor
       end
 
       def post_init
         @traps = Queue.new
-        @results = Queue.new
         start_snmpv2_listener!
         start_trap_processor!
       end
@@ -100,13 +106,7 @@ module Sensu
       end
 
       def run(event, &callback)
-        wait_for_result = Proc.new do
-          result = @results.pop
-          [result[:output], 0]
-        end
-        EM.next_tick do
-          EM.defer(wait_for_result, callback)
-        end
+        yield "no-op", 0
       end
     end
   end
