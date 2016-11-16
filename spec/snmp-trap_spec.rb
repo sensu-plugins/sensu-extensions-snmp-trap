@@ -12,7 +12,7 @@ describe "Sensu::Extension::SNMPTrap" do
         :mibs_dir => File.join(File.dirname(__FILE__), "mibs")
       }
     }
-    @extension.logger = Sensu::Logger.get
+    @extension.logger = Sensu::Logger.get(:log_level => :fatal)
   end
 
   let(:snmpv2_pdu) do

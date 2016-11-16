@@ -1,6 +1,6 @@
 require "sensu/extension"
+require "sensu/extensions/snmp-trap/snmp-patch"
 require "thread"
-require "snmp"
 
 module Sensu
   module Extension
