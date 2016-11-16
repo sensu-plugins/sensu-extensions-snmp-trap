@@ -84,9 +84,13 @@ module Sensu
         end
         @mibs = SNMP::MIB.new
         @logger.debug("snmp trap check extension loading mibs")
+        SNMP::MIB.list_imported(/.*/, SNMP::MIB::DEFAULT_MIB_PATH).each do |module_name|
+          @logger.debug("snmp trap check extension loading mib", :module_name => module_name)
+          @mibs.load_module(module_name, SNMP::MIB::DEFAULT_MIB_PATH)
+        end
         SNMP::MIB.list_imported(/.*/, options[:imported_dir]).each do |module_name|
           @logger.debug("snmp trap check extension loading mib", :module_name => module_name)
-          @mibs.load_module(module_name)
+          @mibs.load_module(module_name, options[:imported_dir])
         end
         @mibs
       end

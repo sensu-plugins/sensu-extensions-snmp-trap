@@ -44,23 +44,6 @@ module SNMP
           nil
         end
       end
-
-      def list_imported(regex=//, mib_dir=nil)
-        list = []
-        # PATCH: always allow importing from the default mib path
-        Dir["#{DEFAULT_MIB_PATH}/*.#{MODULE_EXT}"].each do |name|
-          module_name = File.basename(name, ".*")
-          list << module_name if module_name =~ regex
-        end
-        # PATCH: optionally import from a provided mib path
-        if mib_dir
-          Dir["#{mib_dir}/*.#{MODULE_EXT}"].each do |name|
-            module_name = File.basename(name, ".*")
-            list << module_name if module_name =~ regex
-          end
-        end
-        list
-      end
     end
   end
 end
