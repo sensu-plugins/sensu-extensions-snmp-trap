@@ -69,7 +69,14 @@ module Sensu
         @logger.debug("snmp trap check extension importing mibs", :mibs_dir => options[:mibs_dir])
         Dir.glob(File.join(options[:mibs_dir], "*")) do |mib_file|
           @logger.debug("snmp trap check extension importing mib", :mib_file => mib_file)
-          SNMP::MIB.import_module(mib_file)
+          begin
+            SNMP::MIB.import_module(mib_file)
+          rescue StandardError, SyntaxError => error
+            @logger.debug("snmp trap check extension failed to import mib", {
+              :mib_file => mib_file,
+              :error => error
+            })
+          end
         end
         @mibs = SNMP::MIB.new
         @logger.debug("snmp trap check extension loading mibs")
