@@ -47,7 +47,8 @@ module Sensu
           :port => 1062,
           :community => "public",
           :handlers => ["default"],
-          :mibs_dir => "/etc/sensu/mibs"
+          :mibs_dir => "/etc/sensu/mibs",
+          :imported_dir => File.join(Dir.tmpdir, "sensu_snmp_imported_mibs")
         }
         @options.merge!(@settings[:snmp_trap]) if @settings[:snmp_trap].is_a?(Hash)
         @options
@@ -66,11 +67,14 @@ module Sensu
       end
 
       def load_mibs!
-        @logger.debug("snmp trap check extension importing mibs", :mibs_dir => options[:mibs_dir])
+        @logger.debug("snmp trap check extension importing mibs", {
+          :mibs_dir => options[:mibs_dir],
+          :imported_dir => options[:imported_dir]
+        })
         Dir.glob(File.join(options[:mibs_dir], "*")) do |mib_file|
           @logger.debug("snmp trap check extension importing mib", :mib_file => mib_file)
           begin
-            SNMP::MIB.import_module(mib_file)
+            SNMP::MIB.import_module(mib_file, options[:imported_dir])
           rescue StandardError, SyntaxError => error
             @logger.debug("snmp trap check extension failed to import mib", {
               :mib_file => mib_file,
@@ -80,7 +84,7 @@ module Sensu
         end
         @mibs = SNMP::MIB.new
         @logger.debug("snmp trap check extension loading mibs")
-        SNMP::MIB.list_imported.each do |module_name|
+        SNMP::MIB.list_imported(options[:imported_dir]).each do |module_name|
           @logger.debug("snmp trap check extension loading mib", :module_name => module_name)
           @mibs.load_module(module_name)
         end
