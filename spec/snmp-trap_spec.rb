@@ -20,7 +20,6 @@ describe "Sensu::Extension::SNMPTrap" do
       SNMP::VarBind.new(SNMP::SYS_UP_TIME_OID, SNMP::TimeTicks.new(20)),
       SNMP::VarBind.new(SNMP::SNMP_TRAP_OID_OID, SNMP::ObjectId.new("1.3.6.1.4.1.45717.1.0")),
       SNMP::VarBind.new("1.3.6.1.4.1.45717.1.1.1.2", SNMP::OctetString.new("alert")),
-      SNMP::VarBind.new("1.3.6.1.4.1.45717.1.1.1.4", SNMP::OctetString.new("test")),
       SNMP::VarBind.new("1.3.6.1.4.1.45717.1.1.1.5", SNMP::Integer32.new(2))
     ]
     SNMP::SNMPv2_Trap.new(1, SNMP::VarBindList.new(varbind_list))
