@@ -32,7 +32,7 @@ describe "Sensu::Extension::SNMPTrap" do
   it "can run" do
     async_wrapper do
       EM::open_datagram_socket("127.0.0.1", 3030, Helpers::TestServer) do |server|
-        server.expected = '{"source": "localhost", "name": "SENSU-ENTERPRISE-V1-MIB--sensuEnterpriseNotify.0", "output": "alert", "status": 2, "handlers": ["default"]}'
+        server.expected = '{"source": "localhost", "name": "SENSU-ENTERPRISE-NOTIFY-MIB--sensuEnterpriseEventTrap", "output": "alert", "status": 2, "handlers": ["default"]}'
       end
       EM.next_tick do
         EM::open_datagram_socket("0.0.0.0", 0, nil) do |socket|
