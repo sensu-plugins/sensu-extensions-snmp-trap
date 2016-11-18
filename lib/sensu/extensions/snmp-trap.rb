@@ -121,24 +121,15 @@ module Sensu
         end
       end
 
-      def trap_json_varbind_list(trap)
-        varbind_list = trap.varbind_list.map do |varbind|
+      def trap_varbind_list(trap)
+        trap.varbind_list.map { |varbind|
           begin
-            type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
-            value = type_conversion ? varbind.value.send(type_conversion) : varbind.value
-            {
-              :symbolic_name => @mibs.name(varbind.name.to_oid),
-              :name => varbind.name,
-              :value => value
-            }
+            symbolic_name = @mibs.name(varbind.name.to_oid)
+            "#{symbolic_name} -> #{varbind.value}"
           rescue
-            {
-              :name => varbind.name,
-              :value => varbind.value
-            }
+            "#{varbind.name} -> #{varbind.value}"
           end
-        end
-        Sensu::JSON.dump(varbind_list)
+        }.join(" | ")
       end
 
       def process_trap(trap)
@@ -160,7 +151,7 @@ module Sensu
           end
         end
         result[:name] ||= determine_trap_oid(trap)
-        result[:output] ||= trap_json_varbind_list(trap)
+        result[:output] ||= trap_varbind_list(trap)
         result[:status] ||= 3
         send_result(result)
       end
