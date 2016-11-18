@@ -121,6 +121,17 @@ module Sensu
         end
       end
 
+      def trap_varbind_list(trap)
+        trap.varbind_list.map { |varbind|
+          begin
+            symbolic_name = @mibs.name(varbind.name.to_oid)
+            "#{symbolic_name} #{varbind.name} #{varbind.value}"
+          rescue
+            "#{varbind.name} #{varbind.value}"
+          end
+        }.join("\n")
+      end
+
       def process_trap(trap)
         @logger.debug("snmp trap check extension processing a v2 trap")
         result = {
@@ -140,7 +151,7 @@ module Sensu
           end
         end
         result[:name] ||= determine_trap_oid(trap)
-        result[:output] ||= trap.inspect
+        result[:output] ||= trap_varbind_list(trap)
         result[:status] ||= 3
         send_result(result)
       end
