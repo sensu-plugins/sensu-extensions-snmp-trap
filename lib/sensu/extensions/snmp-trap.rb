@@ -69,10 +69,14 @@ module Sensu
       def determine_mib_preload(module_name)
         preload = []
         if @mibs_map[module_name]
-          @mibs_map[module_name][:imports].each do |import|
+          imports = @mibs_map[module_name][:imports]
+          # two enumerators are required for preload ordering
+          imports.each do |import|
             if @mibs_map[import]
               preload << @mibs_map[import][:mib_file]
             end
+          end
+          imports.each do |import|
             preload << determine_mib_preload(import)
           end
         else
@@ -86,7 +90,7 @@ module Sensu
         @mibs_map = {}
         Dir.glob(File.join(options[:mibs_dir], "*")).each do |mib_file|
           begin
-            mib_contents = IO.read(mib_file)
+            mib_contents = IO.read(mib_file).force_encoding("UTF-8")
             module_name = mib_contents.scan(/([\w-]+)\s+DEFINITIONS\s+::=\s+BEGIN/).flatten.first
             details = {
               :mib_file => mib_file,
