@@ -85,19 +85,27 @@ module Sensu
         @logger.info("snmp trap check extension creating mibs map", :mibs_dir => options[:mibs_dir])
         @mibs_map = {}
         Dir.glob(File.join(options[:mibs_dir], "*")).each do |mib_file|
-          mib_contents = IO.read(mib_file)
-          module_name = mib_contents.scan(/([\w-]+)\s+DEFINITIONS\s+::=\s+BEGIN/).flatten.first
-          details = {
-            :mib_file => mib_file,
-            :imports => mib_contents.scan(/FROM\s+([\w-]+)/).flatten
-          }
-          if @mibs_map.has_key?(module_name)
-            @logger.warn("snmp trap check extension overriding mib map entry", {
-              :module_name => module_name,
-              :details => details
+          begin
+            mib_contents = IO.read(mib_file)
+            module_name = mib_contents.scan(/([\w-]+)\s+DEFINITIONS\s+::=\s+BEGIN/).flatten.first
+            details = {
+              :mib_file => mib_file,
+              :imports => mib_contents.scan(/FROM\s+([\w-]+)/).flatten
+            }
+            if @mibs_map.has_key?(module_name)
+              @logger.warn("snmp trap check extension overriding mib map entry", {
+                :module_name => module_name,
+                :old_details => @mibs_map[module_name],
+                :new_details => details
+              })
+            end
+            @mibs_map[module_name] = details
+          rescue => error
+            @logger.error("snmp trap check extension mibs map error", {
+              :mib_file => mib_file,
+              :error => error.to_s
             })
           end
-          @mibs_map[module_name] = details
         end
         @mibs_map.each_key do |module_name|
           @mibs_map[module_name][:preload] = determine_mib_preload(module_name)
