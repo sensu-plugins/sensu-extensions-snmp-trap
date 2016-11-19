@@ -13,13 +13,13 @@ module SNMP
         @sensu_logger.warn("snmp trap check extension mib warning", :warning => message.downcase)
       end
 
-      def import_module(module_file, mib_dir=DEFAULT_MIB_PATH, mib_preload=[])
+      def import_module(module_file, mib_dir=DEFAULT_MIB_PATH, raw_arguments=nil)
         raise "smidump tool must be installed" unless import_supported?
         FileUtils.makedirs mib_dir
-        # PATCH: add preload support
-        preload = mib_preload.map {|mib_file| " -p #{mib_file}"}.join("")
+        # PATCH: add arguments support
+        arguments = raw_arguments ? " #{raw_arguments}" : ""
         # PATCH: redirect STDERR to /dev/null
-        mib_hash = `smidump#{preload} -k -f python #{module_file} 2>/dev/null`
+        mib_hash = `smidump#{arguments} -k -f python #{module_file} 2>/dev/null`
         mib = eval_mib_data(mib_hash)
         if mib
           module_name = mib["moduleName"]

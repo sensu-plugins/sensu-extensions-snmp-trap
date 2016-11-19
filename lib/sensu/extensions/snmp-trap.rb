@@ -66,20 +66,72 @@ module Sensu
         end
       end
 
+      def determine_mib_preload(module_name)
+        preload = []
+        if @mib_map[module_name]
+          @mib_map[module_name][:imports].each do |import|
+            if @mib_map[import]
+              preload << @mib_map[import][:mib_file]
+            end
+            preload << determine_mib_preload(import)
+          end
+        else
+          @logger.fatal("snmp trap check extension unknown mib preload", :module_name => module_name)
+        end
+        preload.flatten
+      end
+
+      def create_mib_map!
+        @logger.debug("snmp trap check extension creating mib map", :mibs_dir => options[:mibs_dir])
+        @mib_map = {}
+        Dir.glob(File.join(options[:mibs_dir], "*")).each do |mib_file|
+          mib_contents = IO.read(mib_file)
+          module_name = mib_contents.scan(/([\w-]+)\s+DEFINITIONS\s+::=\s+BEGIN/).flatten.first
+          details = {
+            :mib_file => mib_file,
+            :imports => mib_contents.scan(/FROM\s+([\w-]+)/).flatten
+          }
+          if @mib_map.has_key?(module_name)
+            @logger.debug("snmp trap check extension overriding mib map entry", {
+              :module_name => module_name,
+              :details => details
+            })
+          end
+          @mib_map[module_name] = details
+        end
+        @mib_map.each_key do |module_name|
+          @mib_map[module_name][:preload] = determine_mib_preload(module_name)
+        end
+        puts @mib_map
+        @mib_map
+      end
+
       def load_mibs!
         @logger.debug("snmp trap check extension importing mibs", {
           :mibs_dir => options[:mibs_dir],
           :imported_dir => options[:imported_dir]
         })
-        mib_files = Dir.glob(File.join(options[:mibs_dir], "*"))
-        mib_files.each do |mib_file|
-          @logger.debug("snmp trap check extension importing mib", :mib_file => mib_file)
+        @mib_map.each do |module_name, details|
+          @logger.debug("snmp trap check extension importing mib", {
+            :module_name => module_name,
+            :details => details
+          })
           begin
-            preload = mib_files - [mib_file]
-            SNMP::MIB.import_module(mib_file, options[:imported_dir], preload)
+            @logger.debug("snmp trap check extension mib dependencies", {
+              :module_name => module_name,
+              :details => details
+            })
+            unless details[:preload].empty?
+              arguments = "-p "
+              arguments << details[:preload].map { |preload| preload }.join(" -p ")
+            else
+              arguments = nil
+            end
+            SNMP::MIB.import_module(details[:mib_file], options[:imported_dir], arguments)
           rescue StandardError, SyntaxError => error
             @logger.debug("snmp trap check extension failed to import mib", {
-              :mib_file => mib_file,
+              :module_name => module_name,
+              :details => details,
               :error => error
             })
           end
@@ -160,6 +212,7 @@ module Sensu
 
       def start_trap_processor!
         @processor = Thread.new do
+          create_mib_map!
           load_mibs!
           loop do
             process_trap(@traps.pop)
