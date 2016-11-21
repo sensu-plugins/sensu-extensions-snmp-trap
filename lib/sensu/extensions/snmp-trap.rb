@@ -187,6 +187,11 @@ module Sensu
         end
       end
 
+      def determine_trap_severity(trap)
+        oid_symoblic_name = determine_trap_oid(trap)
+        oid_symoblic_name =~ /down/i ? 2 : 0
+      end
+
       def process_trap(trap)
         @logger.debug("snmp trap check extension processing a v2 trap")
         result = {
@@ -217,7 +222,7 @@ module Sensu
         end
         result[:name] ||= determine_trap_oid(trap)
         result[:output] ||= "received snmp trap"
-        result[:status] ||= 0
+        result[:status] ||= determine_trap_severity(trap)
         send_result(result)
       end
 
