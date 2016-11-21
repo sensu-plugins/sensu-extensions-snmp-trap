@@ -187,38 +187,37 @@ module Sensu
         end
       end
 
-      def trap_varbind_list(trap)
-        trap.varbind_list.map { |varbind|
-          begin
-            symbolic_name = @mibs.name(varbind.name.to_oid)
-            "#{symbolic_name} -> #{varbind.value}"
-          rescue
-            "#{varbind.name} -> #{varbind.value}"
-          end
-        }.join(" | ")
-      end
-
       def process_trap(trap)
         @logger.debug("snmp trap check extension processing a v2 trap")
         result = {
           :source => determine_hostname(trap.source_ip),
-          :handlers => options[:handlers]
+          :handlers => options[:handlers],
+          :snmp_trap => {}
         }
         trap.varbind_list.each do |varbind|
           symbolic_name = @mibs.name(varbind.name.to_oid)
-          mapping = RESULT_MAP.detect do |mapping|
-            symbolic_name =~ mapping.first
-          end
-          if mapping && !result[mapping.last]
-            type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
-            if type_conversion
-              result[mapping.last] = varbind.value.send(type_conversion)
+          type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
+          if type_conversion
+            value = varbind.value.send(type_conversion)
+            result[:snmp_trap][symbolic_name] = value
+            mapping = RESULT_MAP.detect do |mapping|
+              symbolic_name =~ mapping.first
             end
+            if mapping && !result[mapping.last]
+              type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
+              result[mapping.last] = value
+            end
+          else
+            @logger.error("snmp trap check extension failed to convert varbind", {
+              :symbolic_name => symbolic_name,
+              :asn1_type => varbind.value.asn1_type,
+              :raw_value => varbind.value
+            })
           end
         end
         result[:name] ||= determine_trap_oid(trap)
-        result[:output] ||= trap_varbind_list(trap)
-        result[:status] ||= 3
+        result[:output] ||= "received snmp trap"
+        result[:status] ||= 0
         send_result(result)
       end
 
