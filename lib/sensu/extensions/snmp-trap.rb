@@ -189,7 +189,11 @@ module Sensu
 
       def determine_trap_status(trap)
         oid_symoblic_name = determine_trap_oid(trap)
-        oid_symoblic_name =~ /down/i ? 2 : 0
+        critical_regexp = [
+          /down/i
+        ]
+        critical = critical_regexp.any? { |regexp| oid_symoblic_name =~ regexp }
+        critical ? 2 : 0
       end
 
       def process_trap(trap)
