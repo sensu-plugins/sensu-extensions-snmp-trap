@@ -187,7 +187,7 @@ module Sensu
         end
       end
 
-      def determine_trap_severity(trap)
+      def determine_trap_status(trap)
         oid_symoblic_name = determine_trap_oid(trap)
         oid_symoblic_name =~ /down/i ? 2 : 0
       end
@@ -222,7 +222,7 @@ module Sensu
         end
         result[:name] ||= determine_trap_oid(trap)
         result[:output] ||= "received snmp trap"
-        result[:status] ||= determine_trap_severity(trap)
+        result[:status] ||= determine_trap_status(trap)
         send_result(result)
       end
 
