@@ -49,7 +49,7 @@ Edit `/etc/sensu/conf.d/snmp_trap.json` to change its configuration.
 }
 ```
 
-|param|type|default|description|
+|attribute|type|default|description|
 |----|----|----|---|
 |bind|string|0.0.0.0|IP to bind the SNMP trap listener to|
 |port|integer|1062|Port to bind the SNMP trap listener to|
