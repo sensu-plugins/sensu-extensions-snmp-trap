@@ -8,7 +8,8 @@ as the client name, when a SNMP trap is received.
 
 The SNMP trap to Sensu check result translation logic is currently
 being improved. Failure to translate the SNMP trap will produce a
-check result (and event) like the following:
+check result (and event) like the following (addresses have been
+redacted):
 
 ![screenshot](https://raw.github.com/sensu-extensions/sensu-extensions-snmp-trap/master/iflinkdown.png)
 
