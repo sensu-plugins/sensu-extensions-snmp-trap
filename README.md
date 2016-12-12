@@ -1,8 +1,12 @@
 # Sensu SNMP Trap Check Extension
 
-Creates a SNMPv2 trap listener as part of the Sensu client process.
-This SNMP trap extension loads MIBs and attempts to translate SNMP
-traps into Sensu check results.
+A SNMP trap listener for the Sensu client process. This check
+extension creates a SNMPv2 trap listener, loads & imports MIB files,
+and attempts to translate SNMP traps into Sensu check results. Sensu
+proxy clients are created for SNMP devices, using the device hostname
+as the client name, when a SNMP trap is received.
+
+![screenshot](https://raw.github.com/sensu-extensions/sensu-extensions-snmp-trap/master/iflinkdown.png)
 
 ## Inspiration
 
