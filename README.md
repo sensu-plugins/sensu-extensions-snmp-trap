@@ -20,15 +20,9 @@ on [SNMPTrapHandler](https://github.com/warmfusion/sensu-extension-snmptrap).
 
 ## Installation
 
+This extension requires Sensu version >= 0.26.
+
 On a Sensu client machine.
-
-For Sensu version < 0.27:
-
-```
-/opt/sensu/embedded/bin/gem install sensu-extensions-snmp-trap -v 0.0.19
-```
-
-For Sensu version >= 0.27:
 
 ```
 sensu-install -e snmp-trap:0.0.19
