@@ -198,7 +198,7 @@ module Sensu
           name = "linkStatus"
           trap.varbind_list.each do |varbind|
             symbolic_name = @mibs.name(varbind.name.to_oid)
-            if symbolic_name =~ /ifdescr/i
+            if symbolic_name =~ /ifindex/i
               type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
               if type_conversion
                 value = varbind.value.send(type_conversion)
