@@ -68,7 +68,10 @@ module Sensu
 
       def convert_to_mapping(configured_mapping)
         configured_mapping.map do |mapping|
-          [Regexp.new(mapping.first), mapping.last.to_sym]
+          [
+            Regexp.new(mapping.first),
+            mapping.last.is_a?(String) ? mapping.last.to_sym : mapping.last
+          ]
         end
       end
 
