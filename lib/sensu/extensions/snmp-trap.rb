@@ -12,6 +12,11 @@ module Sensu
         [/severity/i, :status]
       ]
 
+      RESULT_STATUS_MAP = [
+        [/down/i, 2],
+        [/authenticationfailure/i, 1]
+      ]
+
       RUBY_ASN1_MAP = {
         "INTEGER" => :to_i,
         "OCTET STRING" => :to_s,
@@ -189,11 +194,10 @@ module Sensu
 
       def determine_trap_status(trap)
         oid_symoblic_name = determine_trap_oid(trap)
-        critical_regexp = [
-          /down/i
-        ]
-        critical = critical_regexp.any? { |regexp| oid_symoblic_name =~ regexp }
-        critical ? 2 : 0
+        mapping = RESULT_STATUS_MAP.detect do |mapping|
+          oid_symbolic_name =~ mapping.first
+        end
+        mapping ? mapping.last : 0
       end
 
       def process_trap(trap)
