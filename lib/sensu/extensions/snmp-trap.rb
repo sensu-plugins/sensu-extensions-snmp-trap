@@ -9,6 +9,7 @@ module Sensu
       RESULT_MAP = [
         [/checkname/i, :name],
         [/notification/i, :output],
+        [/description/i, :output],
         [/severity/i, :status]
       ]
 
