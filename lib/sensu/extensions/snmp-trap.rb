@@ -193,7 +193,7 @@ module Sensu
       end
 
       def determine_trap_status(trap)
-        oid_symoblic_name = determine_trap_oid(trap)
+        oid_symbolic_name = determine_trap_oid(trap)
         mapping = RESULT_STATUS_MAP.detect do |mapping|
           oid_symbolic_name =~ mapping.first
         end
