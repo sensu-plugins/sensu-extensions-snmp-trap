@@ -198,20 +198,41 @@ module Sensu
       def determine_trap_name(trap)
         oid_symbolic_name = determine_trap_oid(trap)
         if oid_symbolic_name =~ /link(down|up)/i
-          name = "linkStatus"
+          name = "link_status"
           trap.varbind_list.each do |varbind|
             symbolic_name = @mibs.name(varbind.name.to_oid)
             if symbolic_name =~ /ifindex/i || symbolic_name =~ /systemobject/i
               type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
               if type_conversion
                 value = varbind.value.send(type_conversion)
-                name = "#{name}-#{value}"
+                name = "#{name}_#{value}"
               end
             end
           end
           name
         else
           oid_symbolic_name
+        end
+      end
+
+      def determine_trap_output(trap)
+        oid_symbolic_name = determine_trap_oid(trap)
+        if matched = /link(down|up)/i.match(oid_symbolic_name)
+          link_status = matched[1].downcase
+          output = "link is #{link_status}"
+          trap.varbind_list.each do |varbind|
+            symbolic_name = @mibs.name(varbind.name.to_oid)
+            if symbolic_name =~ /ifalias/i || symbolic_name =~ /ifdesc/i
+              type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
+              if type_conversion
+                value = varbind.value.send(type_conversion)
+                output = "#{output} - #{value}"
+              end
+            end
+          end
+          output
+        else
+          "received snmp trap"
         end
       end
 
@@ -257,7 +278,7 @@ module Sensu
           end
         end
         result[:name] ||= determine_trap_name(trap)
-        result[:output] ||= "received snmp trap"
+        result[:output] ||= determine_trap_output(trap)
         result[:status] ||= determine_trap_status(trap)
         send_result(result)
       end
