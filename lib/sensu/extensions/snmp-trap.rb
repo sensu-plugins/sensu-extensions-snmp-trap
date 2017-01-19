@@ -205,7 +205,9 @@ module Sensu
               type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
               if type_conversion
                 value = varbind.value.send(type_conversion)
-                name = "#{name}_#{value}"
+                unless value == ""
+                  name = "#{name}_#{value}"
+                end
               end
             end
           end
@@ -226,7 +228,9 @@ module Sensu
               type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
               if type_conversion
                 value = varbind.value.send(type_conversion)
-                output = "#{output} - #{value}"
+                unless value == ""
+                  output = "#{output} (#{value})"
+                end
               end
             end
           end
