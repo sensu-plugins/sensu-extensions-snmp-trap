@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "sensu-extensions-snmp-trap"
-  spec.version       = "0.0.31"
+  spec.version       = "0.0.32"
   spec.authors       = ["Sensu-Extensions and contributors"]
   spec.email         = ["<sensu-users@googlegroups.com>"]
 
