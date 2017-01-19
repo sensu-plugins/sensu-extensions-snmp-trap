@@ -7,11 +7,11 @@ module Sensu
     class SNMPTrap < Check
 
       RESULT_MAP = [
-        [/checkname/i, "name"],
-        [/notification/i, "output"],
-        [/description/i, "output"],
-        [/pansystemseverity/i, Proc.new { |value| value > 3 ? 2 : 0 }, "status"],
-        [/severity/i, "status"]
+        [/checkname/i, :name],
+        [/notification/i, :output],
+        [/description/i, :output],
+        [/pansystemseverity/i, Proc.new { |value| value > 3 ? 2 : 0 }, :status],
+        [/severity/i, :status]
       ]
 
       RESULT_STATUS_MAP = [
@@ -42,8 +42,8 @@ module Sensu
 
       def definition
         {
-          name: name,
-          publish: false
+          :name => name,
+          :publish => false
         }
       end
 
@@ -66,13 +66,20 @@ module Sensu
         @options
       end
 
+      def convert_to_mapping(configured_mapping)
+        configured_mapping.map do |mapping|
+          [Regexp.new(mapping.first), mapping.last.to_sym]
+        end
+      end
+
       def result_map
         return @result_map if @result_map
         if options[:mappings] &&
             options[:mappings].is_a?(Hash) &&
             options[:mappings][:result] &&
             options[:mappings][:result].is_a?(Array)
-          @result_map = options[:mappings][:result] + RESULT_MAP
+          configured_mapping = options[:mappings][:result]
+          @result_map = convert_to_mapping(configured_mapping) + RESULT_MAP
         else
           @result_map = RESULT_MAP
         end
@@ -84,7 +91,8 @@ module Sensu
             options[:mappings].is_a?(Hash) &&
             options[:mappings][:result_status] &&
             options[:mappings][:result_status].is_a?(Array)
-          @result_status_map = options[:mappings][:result_status] + RESULT_STATUS_MAP
+          configured_mapping = options[:mappings][:result_status]
+          @result_status_map = convert_to_mapping(configured_mapping) + RESULT_STATUS_MAP
         else
           @result_status_map = RESULT_STATUS_MAP
         end
@@ -280,9 +288,9 @@ module Sensu
         @logger.debug("snmp trap check extension processing a v2 trap")
         result = options[:result_attributes].merge(
           {
-            "source" => determine_hostname(trap.source_ip),
-            "handlers" => options[:handlers],
-            "snmp_trap" => {}
+            :source => determine_hostname(trap.source_ip),
+            :handlers => options[:handlers],
+            :snmp_trap => {}
           }
         )
         trap.varbind_list.each do |varbind|
@@ -290,7 +298,7 @@ module Sensu
           type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
           if type_conversion
             value = varbind.value.send(type_conversion)
-            result["snmp_trap"][symbolic_name] = value
+            result[:snmp_trap][symbolic_name] = value
             mapping = result_map.detect do |mapping|
               symbolic_name =~ mapping.first
             end
@@ -309,9 +317,9 @@ module Sensu
             })
           end
         end
-        result["name"] ||= determine_trap_name(trap)
-        result["output"] ||= determine_trap_output(trap)
-        result["status"] ||= determine_trap_status(trap)
+        result[:name] ||= determine_trap_name(trap)
+        result[:output] ||= determine_trap_output(trap)
+        result[:status] ||= determine_trap_status(trap)
         send_result(result)
       end
 
