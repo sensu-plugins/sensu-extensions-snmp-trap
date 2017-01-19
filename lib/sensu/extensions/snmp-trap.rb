@@ -10,6 +10,7 @@ module Sensu
         [/checkname/i, :name],
         [/notification/i, :output],
         [/description/i, :output],
+        [/pansystemseverity/i, Proc.new { |value| value > 3 ? 2 : 0 }, :status],
         [/severity/i, :status]
       ]
 
@@ -238,7 +239,11 @@ module Sensu
               symbolic_name =~ mapping.first
             end
             if mapping && !result[mapping.last]
-              result[mapping.last] = value
+              if mapping.size == 3
+                result[mapping.last] = mapping[1].call(value)
+              else
+                result[mapping.last] = value
+              end
             end
           else
             @logger.error("snmp trap check extension failed to convert varbind", {
