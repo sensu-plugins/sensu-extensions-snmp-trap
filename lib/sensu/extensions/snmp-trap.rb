@@ -55,7 +55,8 @@ module Sensu
           :community => "public",
           :handlers => ["default"],
           :mibs_dir => "/etc/sensu/mibs",
-          :imported_dir => File.join(Dir.tmpdir, "sensu_snmp_imported_mibs")
+          :imported_dir => File.join(Dir.tmpdir, "sensu_snmp_imported_mibs"),
+          :custom_attributes => {}
         }
         @options.merge!(@settings[:snmp_trap]) if @settings[:snmp_trap].is_a?(Hash)
         @options
@@ -224,11 +225,13 @@ module Sensu
 
       def process_trap(trap)
         @logger.debug("snmp trap check extension processing a v2 trap")
-        result = {
-          :source => determine_hostname(trap.source_ip),
-          :handlers => options[:handlers],
-          :snmp_trap => {}
-        }
+        result = options[:custom_attributes].merge(
+          {
+            :source => determine_hostname(trap.source_ip),
+            :handlers => options[:handlers],
+            :snmp_trap => {}
+          }
+        )
         trap.varbind_list.each do |varbind|
           symbolic_name = @mibs.name(varbind.name.to_oid)
           type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
