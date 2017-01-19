@@ -53,21 +53,19 @@ module Sensu
           :bind => "0.0.0.0",
           :port => 1062,
           :community => "public",
-          :handlers => ["default"],
           :mibs_dir => "/etc/sensu/mibs",
           :imported_dir => File.join(Dir.tmpdir, "sensu_snmp_imported_mibs"),
+          :handlers => ["default"],
           :result_attributes => {},
-          :mappings => {
-            :result => [],
-            :result_status => []
-          }
+          :result_map => [],
+          :result_status_map => []
         }
         @options.merge!(@settings[:snmp_trap]) if @settings[:snmp_trap].is_a?(Hash)
         @options
       end
 
-      def convert_to_mapping(configured_mapping)
-        configured_mapping.map do |mapping|
+      def convert_to_map(configured_map)
+        configured_map.map do |mapping|
           [
             Regexp.new(mapping.first),
             mapping.last.is_a?(String) ? mapping.last.to_sym : mapping.last
@@ -77,12 +75,8 @@ module Sensu
 
       def result_map
         return @result_map if @result_map
-        if options[:mappings] &&
-            options[:mappings].is_a?(Hash) &&
-            options[:mappings][:result] &&
-            options[:mappings][:result].is_a?(Array)
-          configured_mapping = options[:mappings][:result]
-          @result_map = convert_to_mapping(configured_mapping) + RESULT_MAP
+        if options[:result_map] && options[:result_map].is_a?(Array)
+          @result_map = convert_to_map(options[:result_map]) + RESULT_MAP
         else
           @result_map = RESULT_MAP
         end
@@ -90,12 +84,8 @@ module Sensu
 
       def result_status_map
         return @result_status_map if @result_status_map
-        if options[:mappings] &&
-            options[:mappings].is_a?(Hash) &&
-            options[:mappings][:result_status] &&
-            options[:mappings][:result_status].is_a?(Array)
-          configured_mapping = options[:mappings][:result_status]
-          @result_status_map = convert_to_mapping(configured_mapping) + RESULT_STATUS_MAP
+        if options[:result_status_map] && options[:result_status_map].is_a?(Array)
+          @result_status_map = convert_to_map(options[:result_status_map]) + RESULT_STATUS_MAP
         else
           @result_status_map = RESULT_STATUS_MAP
         end

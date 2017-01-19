@@ -25,7 +25,7 @@ This extension requires Sensu version >= 0.26.
 On a Sensu client machine.
 
 ```
-sensu-install -e snmp-trap:0.0.19
+sensu-install -e snmp-trap:0.0.33
 ```
 
 Edit `/etc/sensu/conf.d/extensions.json` to load it.
@@ -34,7 +34,7 @@ Edit `/etc/sensu/conf.d/extensions.json` to load it.
 {
   "extensions": {
     "snmp-trap": {
-      "version": "0.0.19"
+      "version": "0.0.33"
     }
   }
 }
@@ -47,7 +47,13 @@ Edit `/etc/sensu/conf.d/snmp_trap.json` to change its configuration.
 ``` json
 {
   "snmp_trap": {
-    "community": "secret"
+    "community": "secret",
+    "result_attributes": {
+      "datacenter": "DC01"
+    },
+    "result_status_map": [
+      ["authenticationFailure", 0]
+    ]
   }
 }
 ```
@@ -60,3 +66,6 @@ Edit `/etc/sensu/conf.d/snmp_trap.json` to change its configuration.
 |mibs_dir|string|"/etc/sensu/mibs"|MIBs directory to import and load MIBs from|
 |imported_dir|string|"$TMPDIR/sensu_snmp_imported_mibs"|Directory to store imported MIB data in|
 |handlers|array|["default"]|Handlers to specify in Sensu check results|
+|result_attributes|hash|{}|Custom check result attributes to add to every SNMP trap Sensu check result|
+|result_map|array|[]|SNMP trap varbind to Sensu check result translation mappings|
+|result_status_map|array|[]|SNMP trap OID to Sensu check result status mappings|
