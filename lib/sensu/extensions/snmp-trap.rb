@@ -7,11 +7,11 @@ module Sensu
     class SNMPTrap < Check
 
       RESULT_MAP = [
-        [/checkname/i, :name],
-        [/notification/i, :output],
-        [/description/i, :output],
-        [/pansystemseverity/i, Proc.new { |value| value > 3 ? 2 : 0 }, :status],
-        [/severity/i, :status]
+        [/checkname/i, "name"],
+        [/notification/i, "output"],
+        [/description/i, "output"],
+        [/pansystemseverity/i, Proc.new { |value| value > 3 ? 2 : 0 }, "status"],
+        [/severity/i, "status"]
       ]
 
       RESULT_STATUS_MAP = [
@@ -56,10 +56,38 @@ module Sensu
           :handlers => ["default"],
           :mibs_dir => "/etc/sensu/mibs",
           :imported_dir => File.join(Dir.tmpdir, "sensu_snmp_imported_mibs"),
-          :custom_attributes => {}
+          :result_attributes => {},
+          :mappings => {
+            :result => [],
+            :result_status => []
+          }
         }
         @options.merge!(@settings[:snmp_trap]) if @settings[:snmp_trap].is_a?(Hash)
         @options
+      end
+
+      def result_map
+        return @result_map if @result_map
+        if options[:mappings] &&
+            options[:mappings].is_a?(Hash) &&
+            options[:mappings][:result] &&
+            options[:mappings][:result].is_a?(Array)
+          @result_map = options[:mappings][:result] + RESULT_MAP
+        else
+          @result_map = RESULT_MAP
+        end
+      end
+
+      def result_status_map
+        return @result_status_map if @result_status_map
+        if options[:mappings] &&
+            options[:mappings].is_a?(Hash) &&
+            options[:mappings][:result_status] &&
+            options[:mappings][:result_status].is_a?(Array)
+          @result_status_map = options[:mappings][:result_status] + RESULT_STATUS_MAP
+        else
+          @result_status_map = RESULT_STATUS_MAP
+        end
       end
 
       def start_snmpv2_listener!
@@ -242,7 +270,7 @@ module Sensu
 
       def determine_trap_status(trap)
         oid_symbolic_name = determine_trap_oid(trap)
-        mapping = RESULT_STATUS_MAP.detect do |mapping|
+        mapping = result_status_map.detect do |mapping|
           oid_symbolic_name =~ mapping.first
         end
         mapping ? mapping.last : 0
@@ -250,11 +278,11 @@ module Sensu
 
       def process_trap(trap)
         @logger.debug("snmp trap check extension processing a v2 trap")
-        result = options[:custom_attributes].merge(
+        result = options[:result_attributes].merge(
           {
-            :source => determine_hostname(trap.source_ip),
-            :handlers => options[:handlers],
-            :snmp_trap => {}
+            "source" => determine_hostname(trap.source_ip),
+            "handlers" => options[:handlers],
+            "snmp_trap" => {}
           }
         )
         trap.varbind_list.each do |varbind|
@@ -262,8 +290,8 @@ module Sensu
           type_conversion = RUBY_ASN1_MAP[varbind.value.asn1_type]
           if type_conversion
             value = varbind.value.send(type_conversion)
-            result[:snmp_trap][symbolic_name] = value
-            mapping = RESULT_MAP.detect do |mapping|
+            result["snmp_trap"][symbolic_name] = value
+            mapping = result_map.detect do |mapping|
               symbolic_name =~ mapping.first
             end
             if mapping && !result[mapping.last]
@@ -281,9 +309,9 @@ module Sensu
             })
           end
         end
-        result[:name] ||= determine_trap_name(trap)
-        result[:output] ||= determine_trap_output(trap)
-        result[:status] ||= determine_trap_status(trap)
+        result["name"] ||= determine_trap_name(trap)
+        result["output"] ||= determine_trap_output(trap)
+        result["status"] ||= determine_trap_status(trap)
         send_result(result)
       end
 
