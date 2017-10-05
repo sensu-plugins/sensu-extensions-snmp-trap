@@ -68,4 +68,44 @@ Edit `/etc/sensu/conf.d/snmp_trap.json` to change its configuration.
 |handlers|array|["default"]|Handlers to specify in Sensu check results|
 |result_attributes|hash|{}|Custom check result attributes to add to every SNMP trap Sensu check result|
 |result_map|array|[]|SNMP trap varbind to Sensu check result translation mappings|
-|result_status_map|array|[]|SNMP trap OID to Sensu check result status mappings|
+|result_status_map|array|[]|SNMP trap varbind to Sensu check result status mappings|
+
+### Result Map Examples
+
+The configurable result map allows you to define SNMP trap varbind to
+Sensu check result attribute mappings. A mapping is comprised of a
+varbind name regular expression and a check attribute. For example, if
+you expect SNMP traps with a varbind name that contains
+"AlertDescription" and you would like to use its value as the Sensu
+check result output:
+
+``` json
+{
+  "snmp_trap": {
+    "...": "...",
+    "result_map": [
+      ["/description/i", "output"]
+    ]
+  }
+}
+```
+
+### Result Status Map Examples
+
+The configurable result status map allows you to define SNMP trap
+varbind to numeric Sensu check result status value mappings. A
+mapping is comprised of a varbind name regular expression and an check
+exit status (e.g. 1-255). For example, if you expect SNMP traps with a
+varbind name that contains "CriticalError" and you would like to set
+the Sensu check result status to `2` (critical):
+
+``` json
+{
+  "snmp_trap": {
+    "...": "...",
+    "result_status_map": [
+      ["/critical/i", 2]
+    ]
+  }
+}
+```
