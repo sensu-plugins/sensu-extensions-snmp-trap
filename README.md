@@ -90,6 +90,9 @@ check result output:
 }
 ```
 
+Configuring a result map does not replace the built-in mappings, the
+configured mappings take precedence over them.
+
 ### Result Status Map Examples
 
 The configurable result status map allows you to define SNMP trap
@@ -109,3 +112,6 @@ the Sensu check result status to `2` (critical):
   }
 }
 ```
+
+Configuring a result status map does not replace the built-in
+mappings, the configured mappings take precedence over them.
