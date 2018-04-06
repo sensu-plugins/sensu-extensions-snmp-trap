@@ -53,7 +53,9 @@ Edit `/etc/sensu/conf.d/snmp_trap.json` to change its configuration.
     },
     "result_status_map": [
       ["authenticationFailure", 0]
-    ]
+    ],
+    "client_socket_bind": "192.168.0.3",
+    "client_socket_port": 1234
   }
 }
 ```
@@ -69,6 +71,8 @@ Edit `/etc/sensu/conf.d/snmp_trap.json` to change its configuration.
 |result_attributes|hash|{}|Custom check result attributes to add to every SNMP trap Sensu check result|
 |result_map|array|[]|SNMP trap varbind to Sensu check result translation mappings|
 |result_status_map|array|[]|SNMP trap varbind to Sensu check result status mappings|
+|client_socket_bind|string|"127.0.0.1"|IP to send events to when handled|
+|client_socket_port|integer|3030|Port to send events to when handled|
 
 ### Result Map Examples
 

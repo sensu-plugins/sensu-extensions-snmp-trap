@@ -58,7 +58,9 @@ module Sensu
           :handlers => ["default"],
           :result_attributes => {},
           :result_map => [],
-          :result_status_map => []
+          :result_status_map => [],
+          :client_socket_bind => "127.0.0.1",
+          :client_socket_port => 3030
         }
         @options.merge!(@settings[:snmp_trap]) if @settings[:snmp_trap].is_a?(Hash)
         @options
@@ -200,7 +202,7 @@ module Sensu
 
       def send_result(result)
         socket = UDPSocket.new
-        socket.send(Sensu::JSON.dump(result), 0, "127.0.0.1", 3030)
+        socket.send(Sensu::JSON.dump(result), 0, options[:client_socket_bind], options[:client_socket_port])
         socket.close
       end
 
