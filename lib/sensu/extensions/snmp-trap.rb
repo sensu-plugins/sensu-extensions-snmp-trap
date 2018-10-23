@@ -127,7 +127,7 @@ module Sensu
       def create_mibs_map!
         @logger.info("snmp trap check extension creating mibs map", :mibs_dir => options[:mibs_dir])
         @mibs_map = {}
-        Dir.glob(File.join(options[:mibs_dir], "*")).each do |mib_file|
+        Dir.glob(File.join(options[:mibs_dir], "**", "*")).each do |mib_file|
           begin
             mib_contents = IO.read(mib_file).force_encoding("UTF-8")
             module_name = mib_contents.scan(/([\w-]+)\s+DEFINITIONS\s+::=\s+BEGIN/).flatten.first
