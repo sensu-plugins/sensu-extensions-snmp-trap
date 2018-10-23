@@ -42,4 +42,10 @@ describe "Sensu::Extension::SNMPTrap" do
       end
     end
   end
+
+  it "can load mibs from files recursively" do
+    @extension.create_mibs_map!
+    mibs = @extension.instance_variable_get(:@mibs_map)
+    expect(mibs).to have_key("APACHE-MIB")
+  end
 end
