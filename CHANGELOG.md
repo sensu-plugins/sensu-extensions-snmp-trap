@@ -16,7 +16,8 @@ This CHANGELOG follows the format listed [here](https://github.com/sensu-plugins
 ### Changed
 - simplified map config (@portertech)
 
-[Unreleased]: https://github.com/sensu-plugins/sensu-extensions-snmp-trap/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/sensu-plugins/sensu-extensions-snmp-trap/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/sensu-plugins/sensu-extensions-snmp-trap/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/sensu-plugins/sensu-extensions-snmp-trap/compare/v0.0.33...0.1.0
 [0.0.33]: https://github.com/sensu-plugins/sensu-extensions-snmp-trap/compare/v0.0.32...v0.0.33
 [0.0.32]: https://github.com/sensu-plugins/sensu-extensions-snmp-trap/compare/v0.0.31...v0.0.32
